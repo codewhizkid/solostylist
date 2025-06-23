@@ -63,15 +63,15 @@ Frontend:
 - React Router (multi-step flow)
 
 Backend:
-- Node.js w/ Express OR Python Flask (REST API)
+- Node.js w/ Express (REST API)
 - Supabase (PostgreSQL + auth)
-- Prisma ORM (if Node.js)
+- Prisma ORM
 
 Database Schema:
 - stylists, services, clients, appointments, availability, settings
 
 File Storage:
-- Supabase or Cloudinary
+- Supabase Storage
 
 Deployment:
 - Vercel/Netlify for frontend
@@ -84,3 +84,5 @@ Next Steps:
 - Add-on architecture
 - API routes
 
+## 🔮 Roadmap
+See the full development roadmap [here](docs/next-roadmap.md).

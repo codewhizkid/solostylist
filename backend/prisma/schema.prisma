@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stylist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  bio       String?
+  headshot  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services     Service[]
+  clients      Client[]
+  appointments Appointment[]
+  availability Availability[]
+  settings     Settings?
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  duration    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stylist      Stylist       @relation(fields: [stylistId], references: [id])
+  stylistId    String
+  appointments Appointment[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stylist      Stylist       @relation(fields: [stylistId], references: [id])
+  stylistId    String
+  appointments Appointment[]
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stylist   Stylist @relation(fields: [stylistId], references: [id])
+  stylistId String
+
+  client   Client @relation(fields: [clientId], references: [id])
+  clientId String
+
+  service   Service @relation(fields: [serviceId], references: [id])
+  serviceId String
+}
+
+model Availability {
+  id        String   @id @default(cuid())
+  dayOfWeek Int
+  startTime String
+  endTime   String
+
+  stylist   Stylist @relation(fields: [stylistId], references: [id])
+  stylistId String
+}
+
+model Settings {
+  id             String  @id @default(cuid())
+  brandName      String?
+  logoUrl        String?
+  tagline        String?
+  font           String?
+  primaryColor   String?
+  secondaryColor String?
+  tertiaryColor  String?
+  igHandle       String?
+  fbPage         String?
+  website        String?
+
+  stylist   Stylist @relation(fields: [stylistId], references: [id])
+   stylistId String  @unique
+}

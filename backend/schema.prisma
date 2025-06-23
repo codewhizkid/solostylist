@@ -1,0 +1,104 @@
+// Prisma schema for Simply Independent
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stylist {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  bio          String?
+  headshotUrl  String?
+  logoUrl      String?
+  brandFont    String?
+  brandColors  Json?
+  tagline      String?
+  socialLinks  Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  services     Service[]
+  clients      Client[]
+  appointments Appointment[]
+  availability Availability?
+  settings     Settings?
+}
+
+model Service {
+  id            String   @id @default(uuid())
+  stylistId     String
+  name          String
+  description   String?
+  price         Float
+  duration      Int
+  bufferBefore  Int?
+  bufferAfter   Int?
+  isVisible     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  stylist       Stylist  @relation(fields: [stylistId], references: [id])
+  appointments  Appointment[]
+}
+
+model Client {
+  id         String   @id @default(uuid())
+  stylistId  String
+  name       String
+  email      String?
+  phone      String?
+  notes      String?
+  firstVisit DateTime?
+  lastVisit  DateTime?
+  createdAt  DateTime @default(now())
+
+  stylist    Stylist  @relation(fields: [stylistId], references: [id])
+  appointments Appointment[]
+}
+
+model Appointment {
+  id         String   @id @default(uuid())
+  stylistId  String
+  clientId   String
+  serviceId  String
+  startTime  DateTime
+  endTime    DateTime
+  status     String
+  notes      String?
+  createdAt  DateTime @default(now())
+
+  stylist    Stylist  @relation(fields: [stylistId], references: [id])
+  client     Client   @relation(fields: [clientId], references: [id])
+  service    Service  @relation(fields: [serviceId], references: [id])
+}
+
+model Availability {
+  id          String   @id @default(uuid())
+  stylistId   String
+  dayOfWeek   String
+  startTime   String
+  endTime     String
+  isAvailable Boolean  @default(true)
+
+  stylist     Stylist  @relation(fields: [stylistId], references: [id])
+}
+
+model Settings {
+  id             String   @id @default(uuid())
+  stylistId      String
+  smsEnabled     Boolean  @default(false)
+  stripeEnabled  Boolean  @default(false)
+  aiAssistant    Boolean  @default(false)
+  customDomain   String?
+  timezone       String
+  calendarSync   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  stylist        Stylist  @relation(fields: [stylistId], references: [id])
+}
