@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StylistContext } from '../context/StylistContext';
 
 const AboutYouPage = () => {
-  const { stylist } = useContext(StylistContext);
+  const { stylist, setStylist } = useContext(StylistContext);
   const [bio, setBio] = useState('');
   const navigate = useNavigate();
 
@@ -23,6 +23,7 @@ const AboutYouPage = () => {
                 <path d="M24 20.993V24H0v-2.993A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
             </span>
+            // TODO: Add file upload handler and save to context
             <label htmlFor="file-upload" className="cursor-pointer bg-gray-800 rounded-md py-2 px-3 border border-gray-600 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:border-indigo-500 transition">
               <span>Upload a photo</span>
               <input id="file-upload" name="file-upload" type="file" className="sr-only" />
@@ -38,6 +39,7 @@ const AboutYouPage = () => {
             rows={4}
             value={bio}
             onChange={(e) => setBio(e.target.value)}
+            onBlur={() => setStylist((prev) => ({ ...prev, bio }))}
             className="mt-1 block w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="Introduce yourself to your clients..."
           />

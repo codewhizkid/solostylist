@@ -112,7 +112,7 @@ exports.getStylistById = async (req, res) => {
       where: { id: req.params.id },
     });
 
-    if (!stylist) {
+    if (!stylist) { 
       return res.status(404).json({ error: 'Stylist not found' });
     }
 

@@ -1,32 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { StylistContext } from '../context/StylistContext';
 
-const initialAvailability = [
-  { day: 'Sunday', enabled: false, startTime: '09:00', endTime: '17:00' },
-  { day: 'Monday', enabled: true, startTime: '09:00', endTime: '17:00' },
-  { day: 'Tuesday', enabled: true, startTime: '09:00', endTime: '17:00' },
-  { day: 'Wednesday', enabled: true, startTime: '09:00', endTime: '17:00' },
-  { day: 'Thursday', enabled: true, startTime: '09:00', endTime: '17:00' },
-  { day: 'Friday', enabled: true, startTime: '09:00', endTime: '17:00' },
-  { day: 'Saturday', enabled: false, startTime: '09:00', endTime: '17:00' },
+const defaultAvailability = [
+  { day: 'Sunday',    enabled: false, startTime: '09:00', endTime: '17:00' },
+  { day: 'Monday',    enabled: true,  startTime: '09:00', endTime: '17:00' },
+  { day: 'Tuesday',   enabled: true,  startTime: '09:00', endTime: '17:00' },
+  { day: 'Wednesday', enabled: true,  startTime: '09:00', endTime: '17:00' },
+  { day: 'Thursday',  enabled: true,  startTime: '09:00', endTime: '17:00' },
+  { day: 'Friday',    enabled: true,  startTime: '09:00', endTime: '17:00' },
+  { day: 'Saturday',  enabled: false, startTime: '09:00', endTime: '17:00' },
 ];
 
-const AvailabilityPage = () => {
-  const [availability, setAvailability] = useState(initialAvailability);
+export default function AvailabilityPage() {
+  const { stylist, setStylist } = useContext(StylistContext);
+
+  const [availability, setAvailability] = useState(
+    stylist.availability?.length ? stylist.availability : defaultAvailability
+  );
+
   const navigate = useNavigate();
 
   const handleDayChange = (index, field, value) => {
-    const newAvailability = [...availability];
-    newAvailability[index] = { ...newAvailability[index], [field]: value };
-    setAvailability(newAvailability);
+    const updated = [...availability];
+    updated[index] = { ...updated[index], [field]: value };
+    setAvailability(updated);
+  };
+
+  const handleNext = () => {
+    setStylist({ ...stylist, availability });
+    navigate('/onboarding/socials');
   };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-xl">
         <h2 className="text-3xl font-bold mb-2 text-center">Set Your Availability</h2>
-        <p className="text-gray-400 mb-8 text-center">Define your weekly schedule for client bookings.</p>
-        
+        <p className="text-gray-400 mb-8 text-center">
+          Define your weekly schedule for client bookings.
+        </p>
+
         <div className="space-y-4">
           {availability.map((day, index) => (
             <div
@@ -44,7 +57,7 @@ const AvailabilityPage = () => {
                 />
                 <span className="text-lg font-medium w-28">{day.day}</span>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <input
                   type="time"
@@ -66,8 +79,8 @@ const AvailabilityPage = () => {
           ))}
         </div>
 
-        <button 
-          onClick={() => navigate('/onboarding/socials')}
+        <button
+          onClick={handleNext}
           className="mt-8 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
         >
           Next Step
@@ -75,6 +88,4 @@ const AvailabilityPage = () => {
       </div>
     </div>
   );
-};
-
-export default AvailabilityPage; 
+}

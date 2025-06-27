@@ -86,3 +86,38 @@ Next Steps:
 
 ## 🔮 Roadmap
 See the full development roadmap [here](docs/next-roadmap.md).
+
+Phase
+What the stylist sees & does
+What the platform does under the hood
+1. Welcome
+• Lands on a sleek “Build your brand. Book your clients” page.• Clicks Get Started.
+Front-end router sends them to the first onboarding route (/).
+2. Logo Upload + Brand Name
+• Drags in a logo (or skips for now).• Types a brand name and optional tagline.
+Stores logo file → Supabase Storage.Saves brandName, tagline, logoUrl to the in-memory StylistContext.
+3. Pick Font & Colors
+• Chooses a curated font (e.g. Modern Sans, Classic Serif, Elegant Script).• Clicks a color palette card (Indigo & Slate, Mint & Charcoal, etc.).
+Updates font and colors in StylistContext so later pages can preview the brand style.
+4. About You
+• Uploads a head-shot.• Writes a short bio.
+Saves bio and headshotUrl to context.
+5. Add Services
+• Fills a dynamic list (e.g., “Haircut – $50 – 45 min”).• Adds or removes rows until happy.
+Maintains a local services[] array → persists to StylistContext.
+6. Set Availability
+• Sees a weekly grid (Mon–Sun).• Click-drags to mark working hours; adds breaks.
+Builds an availability[] structure (weekday, start, end).
+7. Social Links
+• Drops in Instagram, Facebook, website URLs.
+Adds socials{} to context.
+8. Finish / Auto-Generate Account
+• Hits Finish & Go to Dashboard.• Brief loader (“Creating your studio…”)
+One POST → /api/stylistsjson  { brandName, font, colors, bio, services, availability, socials }Backend (Prisma) creates:• stylist row (core profile)• service rows (bulk create)• availability rows
+9. First-Time Dashboard
+• Redirected to /dashboard.• Sees a left nav and today’s empty calendar.• Brand logo, colors, and font already applied.
+Dashboard fetches fresh data via:GET /api/appointments (none yet)GET /api/servicesGET /api/availability
+10. Daily Usage
+• Adds walk-in appointments directly on the calendar.• Clients who visit the public booking URL see the stylist’s brand and can self-schedule.• Stylist checks “Clients” tab to view history and notes.
+Calendar CRUD hits /api/appointments.Public site validates slots against availability & existing bookings.Email (and later SMS) confirmations fire via server-side triggers.
+
