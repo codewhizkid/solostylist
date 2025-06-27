@@ -1,38 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { StylistContext } from '../context/StylistContext';
 
 const fonts = [
-  { name: 'Modern Sans', className: 'font-sans' },
+  { name: 'Modern Sans',   className: 'font-sans'  },
   { name: 'Classic Serif', className: 'font-serif' },
-  { name: 'Elegant Script', className: 'font-cursive' }, // Placeholder, needs a real script font
+  { name: 'Elegant Script',className: 'font-cursive' }, // Dancing Script
 ];
 
 const palettes = [
-  { name: 'Indigo & Slate', colors: ['#4F46E5', '#64748B', '#F8FAFC'] },
+  { name: 'Indigo & Slate',  colors: ['#4F46E5', '#64748B', '#F8FAFC'] },
   { name: 'Mint & Charcoal', colors: ['#34D399', '#374151', '#F9FAFB'] },
-  { name: 'Rose & Stone', colors: ['#F43F5E', '#78716C', '#FEF2F2'] },
+  { name: 'Rose & Stone',    colors: ['#F43F5E', '#78716C', '#FEF2F2'] },
 ];
 
-const StyleSelectionPage = () => {
-  const [selectedFont, setSelectedFont] = useState(fonts[0]);
-  const [selectedPalette, setSelectedPalette] = useState(palettes[0]);
+export default function StyleSelectionPage() {
+  const { stylist, setStylist } = useContext(StylistContext);
+  const [selectedFont, setSelectedFont]       = useState(stylist.font   || fonts[0]);
+  const [selectedPalette, setSelectedPalette] = useState(stylist.colors || palettes[0]);
   const navigate = useNavigate();
+
+  // load Google Dancing Script once
+  useEffect(() => {
+    const id = 'google-dancing-script';
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id = id;
+      link.rel = 'stylesheet';
+      link.href =
+        'https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap';
+      document.head.appendChild(link);
+    }
+  }, []);
+
+  const handleNext = () => {
+    setStylist({
+      ...stylist,
+      font:   selectedFont,
+      colors: selectedPalette,
+    });
+    navigate('/onboarding/about');
+  };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8">
       <div className="w-full max-w-2xl">
         <h2 className="text-3xl font-bold mb-2 text-center">Define Your Style</h2>
-        <p className="text-gray-400 mb-8 text-center">Choose a font and color palette that reflects your brand's personality.</p>
+        <p className="text-gray-400 mb-8 text-center">
+          Choose a font and color palette that reflects your brand's personality.
+        </p>
 
-        {/* Font Selection */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-left">Choose your font</h3>
-          <div className="flex justify-center space-x-4">
+        {/* Font selection */}
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-4">Choose your font</h3>
+          <div className="flex flex-wrap justify-center gap-4">
             {fonts.map((font) => (
               <button
                 key={font.name}
                 onClick={() => setSelectedFont(font)}
-                className={`px-6 py-3 rounded-lg text-lg transition-all border-2 ${
+                className={`px-6 py-3 rounded-lg border-2 transition-all ${
                   selectedFont.name === font.name
                     ? 'bg-indigo-600 border-indigo-500'
                     : 'bg-gray-800 border-gray-600 hover:border-indigo-500'
@@ -42,11 +68,11 @@ const StyleSelectionPage = () => {
               </button>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Color Palette Selection */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-left">Select a color palette</h3>
+        {/* Color palette */}
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold mb-4">Select a color palette</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {palettes.map((palette) => (
               <div
@@ -67,14 +93,16 @@ const StyleSelectionPage = () => {
                     />
                   ))}
                 </div>
-                <p className="text-center mt-3 text-sm font-medium text-gray-300">{palette.name}</p>
+                <p className="text-center mt-3 text-sm font-medium text-gray-300">
+                  {palette.name}
+                </p>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        <button 
-          onClick={() => navigate('/onboarding/about')}
+        <button
+          onClick={handleNext}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
         >
           Next Step
@@ -82,18 +110,12 @@ const StyleSelectionPage = () => {
       </div>
     </div>
   );
-};
+}
 
-// A simple font-family definition for the placeholder script font
-const styles = `
+/* Tailwind utility for script font */
+const style = document.createElement('style');
+style.innerHTML = `
   @import url('https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap');
   .font-cursive { font-family: 'Dancing Script', cursive; }
 `;
-
-const styleSheet = document.createElement("style");
-styleSheet.type = "text/css";
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
-
-
-export default StyleSelectionPage; 
+document.head.appendChild(style);

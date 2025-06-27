@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { StylistContext } from '../context/StylistContext';
 
 const BrandingPage = () => {
-  const [brandName, setBrandName] = useState('');
-  const [tagline, setTagline] = useState('');
+  const { stylist, setStylist } = useContext(StylistContext);
+  const [brandName, setBrandName] = useState(stylist.brandName);
+  const [tagline, setTagline] = useState(stylist.tagline);
   const navigate = useNavigate();
+
+  const handleNext = () => {
+    setStylist({ ...stylist, brandName, tagline });
+    navigate('/onboarding/style');
+  };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8">
@@ -58,7 +65,7 @@ const BrandingPage = () => {
         </div>
 
         <button 
-          onClick={() => navigate('/onboarding/style')}
+          onClick={handleNext}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
         >
           Next Step

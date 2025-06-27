@@ -3,21 +3,87 @@ const prisma = new PrismaClient();
 
 /**
  * POST /api/stylists
- * body: { email, name, password, bio?, headshot? }
+ * Expects body:
+ * {
+ *   email, password, name, bio?, headshot?,
+ *   font, colors:{primary,secondary,tertiary},
+ *   tagline?, logoUrl?,
+ *   socials:{instagram,facebook,website},
+ *   services:[{name,price,duration}],
+ *   availability:[{day,startTime,endTime,enabled}]
+ * }
  */
 exports.createStylist = async (req, res) => {
   try {
-    const { email, name, password, bio, headshot } = req.body;
+    const {
+      email,
+      password,
+      name,
+      bio,
+      headshot,
+      font,
+      colors = {},
+      tagline,
+      logoUrl,
+      socials = {},
+      services = [],
+      availability = [],
+    } = req.body;
 
     if (!email || !name || !password) {
-      return res.status(400).json({ error: 'email, name and password are required' });
+      return res
+        .status(400)
+        .json({ error: 'email, name, and password are required' });
     }
 
     const stylist = await prisma.stylist.create({
-      data: { email, name, password, bio, headshot },
+      data: {
+        email,
+        name,
+        password, // TODO: hash later
+        bio,
+        headshot,
+
+        // Nested: create service rows
+        services: {
+          create: services.map((s) => ({
+            name: s.name,
+            price: Number(s.price) || 0,
+            duration: Number(s.duration) || 0,
+          })),
+        },
+
+        // Nested: create availability rows (only enabled days)
+        availability: {
+          create: availability
+            .filter((d) => d.enabled)
+            .map((d) => ({
+              dayOfWeek: d.day, // assuming day is string for now
+              startTime: d.startTime,
+              endTime: d.endTime,
+            })),
+        },
+
+        // Nested: create settings row with branding + socials
+        settings: {
+          create: {
+            brandName: name,
+            logoUrl: logoUrl || headshot, // fallback
+            tagline,
+            font,
+            primaryColor: colors.primary,
+            secondaryColor: colors.secondary,
+            tertiaryColor: colors.tertiary,
+            igHandle: socials.instagram,
+            fbPage: socials.facebook,
+            website: socials.website,
+          },
+        },
+      },
+      select: { id: true },
     });
 
-    res.status(201).json(stylist);
+    res.status(201).json(stylist); // { id: "..." }
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create stylist' });

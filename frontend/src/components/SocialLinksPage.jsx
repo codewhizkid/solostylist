@@ -1,11 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { StylistContext } from '../context/StylistContext';
 
 const SocialLinksPage = () => {
+  const { stylist } = useContext(StylistContext);
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
   const [website, setWebsite] = useState('');
   const navigate = useNavigate();
+
+  const handleFinish = async () => {
+    await fetch('http://localhost:3001/api/stylists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: 'placeholder@later.com',   // temporary—for now
+        name : stylist.brandName,
+        password: 'temp',                 // until auth added
+        bio  : stylist.bio,
+        ...stylist // include other fields your backend will accept
+      }),
+    });
+    navigate('/dashboard');
+  };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8">
@@ -58,7 +75,7 @@ const SocialLinksPage = () => {
         </div>
 
         <button 
-          onClick={() => navigate('/')}
+          onClick={handleFinish}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
         >
           Finish Onboarding

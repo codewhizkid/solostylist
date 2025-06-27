@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { StylistContext } from '../context/StylistContext';
 
 const AboutYouPage = () => {
+  const { stylist } = useContext(StylistContext);
   const [bio, setBio] = useState('');
   const navigate = useNavigate();
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8">
+    <div className={`bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-8 ${stylist.font.className}`} style={{ color: stylist.colors[0] }}>
       <div className="w-full max-w-md">
         <h2 className="text-3xl font-bold mb-2 text-center">Tell Us About You</h2>
         <p className="text-gray-400 mb-8 text-center">This information will be displayed on your public booking page.</p>
