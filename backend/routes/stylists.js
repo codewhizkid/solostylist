@@ -1,30 +1,31 @@
 const express = require('express');
 const router = express.Router();
-
-console.log('🛣  Stylist routes loaded');
+const { protect } = require('../middleware/authMiddleware');
 
 // Import controller functions
 const {
-  createStylist,
+  updateStylistOnboarding,
   getStylists,
   getStylistById,
-  updateStylist,
   deleteStylist,
 } = require('../controllers/stylistController');
 
-// ----- CRUD Endpoints ----- //
+// ----- Routes ----- //
 
-// Create a new stylist
-router.post('/', createStylist);
+// @route   PUT /api/stylists/onboarding
+// @desc    Update a stylist's profile after the onboarding flow
+// @access  Private
+router.put('/onboarding', protect, updateStylistOnboarding);
+
+
+// Keep the other routes for now, but they should also be protected
+// in a real application to ensure only authorized users can access them.
 
 // Get all stylists
 router.get('/', getStylists);
 
 // Get a single stylist by ID
 router.get('/:id', getStylistById);
-
-// Update stylist (optional for later)
-router.put('/:id', updateStylist);
 
 // Delete stylist (optional for later)
 router.delete('/:id', deleteStylist);

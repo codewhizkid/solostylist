@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const { getStylistById, getStylists, deleteStylist } = require('./stylistController');
 
 /**
  * POST /api/stylists
@@ -20,14 +21,14 @@ exports.createStylist = async (req, res) => {
       password,
       name,
       bio,
-      headshot,
+      headshotUrl,
       font,
-      colors = {},
+      colors = {}, // { primary, secondary, tertiary }
       tagline,
       logoUrl,
-      socials = {},
-      services = [],
-      availability = [],
+      socials = {}, // { instagram, facebook, website }
+      services = [], // [{ name, price, duration }]
+      availability = [], // [{ day, startTime, endTime, enabled }]
     } = req.body;
 
     if (!email || !name || !password) {
@@ -36,15 +37,22 @@ exports.createStylist = async (req, res) => {
         .json({ error: 'email, name, and password are required' });
     }
 
+    const dayStringToInt = (day) => {
+      const map = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+      return map[day] ?? 0;
+    };
+
     const stylist = await prisma.stylist.create({
       data: {
         email,
+        password, // TODO: hash with bcrypt
         name,
-        password, // TODO: hash later
         bio,
-        headshot,
+        headshotUrl,
+        font,
+        primaryColor: colors.primary,
 
-        // Nested: create service rows
+        // Nested Services
         services: {
           create: services.map((s) => ({
             name: s.name,
@@ -53,30 +61,27 @@ exports.createStylist = async (req, res) => {
           })),
         },
 
-        // Nested: create availability rows (only enabled days)
+        // Nested Availability (only enabled days)
         availability: {
           create: availability
             .filter((d) => d.enabled)
             .map((d) => ({
-              dayOfWeek: d.day, // assuming day is string for now
+              dayOfWeek: dayStringToInt(d.day).toString(),
               startTime: d.startTime,
               endTime: d.endTime,
             })),
         },
 
-        // Nested: create settings row with branding + socials
+        // Nested Settings
         settings: {
           create: {
-            brandName: name,
-            logoUrl: logoUrl || headshot, // fallback
+            brandName: name, // assuming brandName is same as stylist name for now
             tagline,
-            font,
-            primaryColor: colors.primary,
-            secondaryColor: colors.secondary,
-            tertiaryColor: colors.tertiary,
-            igHandle: socials.instagram,
-            fbPage: socials.facebook,
-            website: socials.website,
+            socialLinks: {
+              instagram: socials.instagram,
+              facebook: socials.facebook,
+              website: socials.website,
+            },
           },
         },
       },
@@ -90,12 +95,100 @@ exports.createStylist = async (req, res) => {
   }
 };
 
+// This is the new primary function for this controller.
+// It will take all the onboarding data and update the stylist record.
+exports.updateStylistOnboarding = async (req, res) => {
+  // The user's ID will come from the authentication token, not the URL params
+  const stylistId = req.user.id; 
+
+  try {
+    const {
+      bio,
+      headshotUrl,
+      font,
+      colors = {},
+      tagline,
+      logoUrl,
+      socials = {},
+      services = [],
+      availability = [],
+      brandName,
+    } = req.body;
+
+    const dayStringToInt = (day) => {
+      const map = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+      return map[day] ?? 0;
+    };
+
+    // Use prisma.stylist.update instead of create
+    const updatedStylist = await prisma.stylist.update({
+      where: { id: stylistId },
+      data: {
+        bio,
+        headshotUrl,
+        font,
+        primaryColor: colors.primary,
+
+        // Clear and recreate nested models to avoid duplicates
+        services: {
+          deleteMany: {},
+          create: services.map((s) => ({
+            name: s.name,
+            price: Number(s.price) || 0,
+            duration: Number(s.duration) || 0,
+          })),
+        },
+        availability: {
+          deleteMany: {},
+          create: availability
+            .filter((d) => d.enabled)
+            .map((d) => ({
+              dayOfWeek: dayStringToInt(d.day).toString(),
+              startTime: d.startTime,
+              endTime: d.endTime,
+            })),
+        },
+        settings: {
+          upsert: { // Use upsert to create if not exists, or update if it does
+            create: {
+              brandName,
+              tagline,
+              socialLinks: {
+                instagram: socials.instagram,
+                facebook: socials.facebook,
+                website: socials.website,
+              },
+            },
+            update: {
+              brandName,
+              tagline,
+              socialLinks: {
+                instagram: socials.instagram,
+                facebook: socials.facebook,
+                website: socials.website,
+              },
+            }
+          }
+        }
+      },
+      include: { services: true, availability: true, settings: true },
+    });
+
+    res.status(200).json(updatedStylist);
+  } catch (err) {
+    console.error('Failed to update stylist onboarding:', err);
+    res.status(500).json({ error: 'Failed to update stylist' });
+  }
+};
+
 /**
  * GET /api/stylists
  */
 exports.getStylists = async (_req, res) => {
   try {
-    const stylists = await prisma.stylist.findMany();
+    const stylists = await prisma.stylist.findMany({
+      include: { services: true, availability: true, settings: true },
+    });
     res.json(stylists);
   } catch (err) {
     console.error(err);
@@ -110,9 +203,10 @@ exports.getStylistById = async (req, res) => {
   try {
     const stylist = await prisma.stylist.findUnique({
       where: { id: req.params.id },
+      include: { services: true, availability: true, settings: true },
     });
 
-    if (!stylist) { 
+    if (!stylist) {
       return res.status(404).json({ error: 'Stylist not found' });
     }
 

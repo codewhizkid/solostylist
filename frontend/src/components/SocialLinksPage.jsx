@@ -1,44 +1,78 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StylistContext } from '../context/StylistContext';
 
 export default function SocialLinksPage() {
   const { stylist, setStylist } = useContext(StylistContext);
+  const navigate = useNavigate();
 
+  // Local state for the inputs
   const [instagram, setInstagram] = useState(stylist.socials?.instagram || '');
   const [facebook, setFacebook]   = useState(stylist.socials?.facebook  || '');
   const [website,  setWebsite]    = useState(stylist.socials?.website   || '');
 
-  const navigate = useNavigate();
-
-  /* ---- persist socials + submit ---- */
-  const handleFinish = async () => {
-    // 1. update context
+  // Persist to context on change
+  useEffect(() => {
     const socials = { instagram, facebook, website };
-    const payload = { ...stylist, socials };
-    setStylist(payload);
+    setStylist(prev => ({ ...prev, socials }));
+  }, [instagram, facebook, website, setStylist]);
 
-    // 2. POST to backend (temp email/password until auth added)
+
+  const handleFinish = async () => {
+    // Construct the final payload from the complete context
+    const finalPayload = {
+      // The user is now identified by the JWT, so these are no longer needed.
+      // email: 'stylist@example.com',
+      // password: 'temporary-password',
+      // name: stylist.brandName || 'The Stylist',
+
+      // Data from context
+      bio: stylist.bio,
+      headshotUrl: stylist.headshot, // Corrected from stylist.logo
+      font: stylist.font?.name,
+      colors: {
+        primary: stylist.colors?.colors?.[0],
+        secondary: stylist.colors?.colors?.[1],
+        tertiary: stylist.colors?.colors?.[2],
+      },
+      logoUrl: stylist.logo,
+      socials: stylist.socials,
+      services: stylist.services,
+      availability: stylist.availability,
+      brandName: stylist.brandName,
+      tagline: stylist.tagline, // Ensure tagline is included
+    };
+
     try {
-      await fetch('http://localhost:3001/api/stylists', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'placeholder@later.com',
-          name:  payload.brandName,
-          password: 'temp',
-          bio: payload.bio,
-          font: payload.font,
-          colors: payload.colors,
-          services: payload.services,
-          availability: payload.availability,
-          socials,
-        }),
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found. Please log in.');
+      }
+
+      const response = await fetch('http://localhost:3001/api/stylists/onboarding', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(finalPayload),
       });
-      navigate('/dashboard');
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'API request failed');
+      }
+
+      const result = await response.json();
+      console.log('Stylist created successfully:', result);
+
+      // Clear localStorage and navigate to a success/dashboard page
+      localStorage.removeItem('stylist-onboarding');
+      navigate('/dashboard'); // TODO: Create this page
+
     } catch (err) {
       console.error('Failed to create stylist:', err);
-      alert('Something went wrong. Please try again.');
+      alert(`Something went wrong: ${err.message}`);
     }
   };
 
@@ -78,7 +112,7 @@ export default function SocialLinksPage() {
             placeholder="TheGoldenShears"
           />
         </div>
-
+        
         {/* Website */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-300">Website URL</label>
@@ -91,7 +125,7 @@ export default function SocialLinksPage() {
           />
         </div>
 
-        <button
+        <button 
           onClick={handleFinish}
           className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-colors"
         >

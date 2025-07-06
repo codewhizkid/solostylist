@@ -39,7 +39,7 @@ export default function StyleSelectionPage() {
       font:   selectedFont,
       colors: selectedPalette,
     });
-    navigate('/onboarding/about');
+    navigate('/onboarding/services');
   };
 
   return (

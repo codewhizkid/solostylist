@@ -12,5 +12,5 @@ createRoot(document.getElementById('root')).render(
         <App />
       </StylistProvider>
     </BrowserRouter>
-  </StrictMode>     {/* ← removed the trailing comma */}
+  </StrictMode>
 );

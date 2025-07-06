@@ -1,4 +1,3 @@
-// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,12 +8,13 @@ datasource db {
 }
 
 model Stylist {
-  id             String        @id @default(cuid())
+  id             String      @id @default(cuid())
   name           String
-  email          String        @unique
+  email          String      @unique
   password       String
   bio            String?
   headshotUrl    String?
+  brandName      String?
   font           String?
   primaryColor   String?
   secondaryColor String?
@@ -26,90 +26,31 @@ model Stylist {
   availability   Availability[]
   settings       Settings?
 
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model Service {
-  id        String   @id @default(cuid())
-  name      String
-  price     Float
-  duration  Int            // minutes
-  stylist   Stylist  @relation(fields: [stylistId], references: [id])
-  stylistId String
+  id         String   @id @default(cuid())
+  name       String
+  price      Float
+  duration   Int // in minutes
+  stylist    Stylist @relation(fields: [stylistId], references: [id])
+  stylistId  String
 }
 
 model Availability {
   id         String   @id @default(cuid())
-  dayOfWeek  Int      // 0-6 (Sun-Sat) makes querying easier
-  startTime  String   // "09:00"
-  endTime    String   // "17:00"
-  stylist    Stylist  @relation(fields: [stylistId], references: [id])
+  dayOfWeek  String
+  startTime  String
+  endTime    String
+  stylist    Stylist @relation(fields: [stylistId], references: [id])
   stylistId  String
 }
 
 model Settings {
-  id             String   @id @default(cuid())
-  igHandle       String?
-  fbPage         String?
-  website        String?
-  stylist        Stylist  @relation(fields: [stylistId], references: [id])
-  stylistId      String   @unique
-}// prisma/schema.prisma
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-model Stylist {
-  id             String        @id @default(cuid())
-  name           String
-  email          String        @unique
-  password       String
-  bio            String?
-  headshotUrl    String?
-  font           String?
-  primaryColor   String?
-  secondaryColor String?
-  tertiaryColor  String?
-  tagline        String?
-  logoUrl        String?
-
-  services       Service[]
-  availability   Availability[]
-  settings       Settings?
-
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-}
-
-model Service {
-  id        String   @id @default(cuid())
-  name      String
-  price     Float
-  duration  Int            // minutes
-  stylist   Stylist  @relation(fields: [stylistId], references: [id])
-  stylistId String
-}
-
-model Availability {
-  id         String   @id @default(cuid())
-  dayOfWeek  Int      // 0-6 (Sun-Sat) makes querying easier
-  startTime  String   // "09:00"
-  endTime    String   // "17:00"
-  stylist    Stylist  @relation(fields: [stylistId], references: [id])
-  stylistId  String
-}
-
-model Settings {
-  id             String   @id @default(cuid())
-  igHandle       String?
-  fbPage         String?
-  website        String?
-  stylist        Stylist  @relation(fields: [stylistId], references: [id])
-  stylistId      String   @unique
+  id           String   @id @default(cuid())
+  socialLinks  Json?
+  stylist      Stylist  @relation(fields: [stylistId], references: [id])
+  stylistId    String   @unique
 }
